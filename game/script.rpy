@@ -23,7 +23,7 @@ label start:
 
     scene 1ersalon
     with Dissolve(1.0)
-    
+
     n "*Bostezo*"
     n "...¿Qué...?"
     n "Me doy cuenta que estoy en un salón de clases."
@@ -50,13 +50,8 @@ label start:
     n "Un problema."
     n "No cualquier problema, es..."
     n "¿Métodos? {w=0.5}¿Métodos numéricos?"
-    n "Tuve esa materia en la universidad, con la Ingeniera Zamora..."
+    n "Tuve esa materia hace algunos semestres con la Ingeniera Zamora..."
     n "Me acerco al pizarrón para leer el problema"
 
-
-
-
-
-    # Finaliza el juego:
-
     return
+

@@ -372,8 +372,7 @@ screen main_menu():
         spacing 25
 
         textbutton "Jugar" style "red_button":
-            action Start()
-
+            action Jump("main_menu_start")
         textbutton "Opciones" style "red_button":
             action ShowMenu("preferences")
 
