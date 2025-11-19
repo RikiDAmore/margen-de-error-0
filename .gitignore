@@ -1,0 +1,12 @@
+# Ren'Py stuff to ignore
+game/cache/
+*.rpyc
+*.rpyb
+*.bak
+
+# Windows junk
+Thumbs.db
+
+# Editor stuff
+.vscode/
+*.log
