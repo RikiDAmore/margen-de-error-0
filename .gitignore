@@ -10,3 +10,10 @@ Thumbs.db
 # Editor stuff
 .vscode/
 *.log
+
+game/saves/
+*.save
+
+errors.txt
+log.txt
+traceback.txt
