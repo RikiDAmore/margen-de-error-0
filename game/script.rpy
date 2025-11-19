@@ -28,8 +28,6 @@ label start:
 
     e "Añade una historia, imágenes y música, ¡y puedes presentarlo al mundo!"
 
-    e "pilin"
-
     # Finaliza el juego:
 
     return
