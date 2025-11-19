@@ -2,11 +2,19 @@
 
 # Declara los personajes usados en el juego como en el ejemplo:
 
+define name = ""
 define n = Character("")
 
 
 # El juego comienza aquí.
 label start:
+
+    # Muestra el cuadro de entrada para el nombre
+    call screen name_input
+
+    # Si el jugador no ingresa un nombre, puedes establecer un valor predeterminado
+    if player_name == "":
+        $ player_name = "Jugador"  # Nombre predeterminado
 
     # Muestra una imagen de fondo: Aquí se usa un marcador de posición por
     # defecto. Es posible añadir un archivo en el directorio 'images' con el

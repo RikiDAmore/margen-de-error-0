@@ -2,9 +2,13 @@
 errors listed below, and try again.
 
 
-File "game/transitions.rpy", line 7: end of line expected.
-    show screen scene expression Solid("#fff")
-                      ^
+File "game/screens.rpy", line 1675: keyword argument 'xalign' is incompatible with 'align'.
+    xalign 0.5
+          ^
+
+File "game/screens.rpy", line 1676: keyword argument 'yalign' is incompatible with 'align'.
+    yalign 0.5
+          ^
 
 Ren'Py Version: Ren'Py 8.5.0.25111603
-Wed Nov 19 12:32:49 2025
+Wed Nov 19 12:51:51 2025

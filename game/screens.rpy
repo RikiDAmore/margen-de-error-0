@@ -1667,3 +1667,25 @@ style red_button is default:
     background None
     hover_background None
 style red_button_text is red_button
+
+screen name_input():
+
+    frame:
+        align (0.5, 0.5)       # Centra el frame completo
+
+        vbox:
+            spacing 20
+            xalign 0.5         # Centra elementos dentro del vbox
+
+            text "Escribe tu nombre:"
+
+            input:
+                value VariableInputValue("name")
+                xalign 0.5
+
+            textbutton "Aceptar":
+                action [
+                    SetVariable("player_name", name),
+                    Return()
+                ]
+                xalign 0.5
