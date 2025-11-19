@@ -2,32 +2,35 @@
 
 # Declara los personajes usados en el juego como en el ejemplo:
 
-define e = Character("Eileen")
 define n = Character("")
 
 
 # El juego comienza aquí.
-
 label start:
 
     # Muestra una imagen de fondo: Aquí se usa un marcador de posición por
     # defecto. Es posible añadir un archivo en el directorio 'images' con el
     # nombre "bg room.png" or "bg room.jpg" para que se muestre aquí.
-
-    scene bg room
-
-    # Muestra un personaje: Se usa un marcador de posición. Es posible
+    # Muestra un persaje: Se usa un marcador de posición. Es posible
     # reemplazarlo añadiendo un archivo llamado "eileen happy.png" al directorio
     # 'images'.
 
-    show eileen happy
 
     # Presenta las líneas del diálogo.
 
-    e "Has creado un nuevo juego Ren'Py."
+    n "..."
+    n "..."
+    n "..."
+    n "La atmosfera se siente fria, incomoda incluso."
+    n "Me doy cuenta que... dormi... ¿sentado?"
 
-    e "Añade una historia, imágenes y música, ¡y puedes presentarlo al mundo!"
+    scene 1ersalon
 
+    n "*Bostezo*"
+    n "...¿Qué...?"
+    n "Me doy cuenta que estoy en un salón de clases."
+    n "Pero... no es el de siempre."
+    n "No estoy en mi escuela... no es esta."
     # Finaliza el juego:
 
     return

@@ -333,13 +333,12 @@ screen navigation():
             textbutton _("Salir") action Quit(confirm=not main_menu)
 
 
+
 style navigation_button is gui_button
 style navigation_button_text is gui_button_text
-
 style navigation_button:
     size_group "navigation"
     properties gui.button_properties("navigation_button")
-
 style navigation_button_text:
     properties gui.text_properties("navigation_button")
 
@@ -357,31 +356,60 @@ screen main_menu():
     # Fondo completamente negro
     add Solid("#000000")
 
-    # Música del menú (se reproduce solo una vez)
+    # Música del menú
     on "show" action Play("music", "audio/mmenu.mp3")
 
-    # Contenedor principal centrado
+    # Logo
     vbox:
-        align (0.5, 0.3)     # Posición vertical del título
-        spacing 20
+        align (0.5, 0.22)
+        spacing 10
 
-        text "Margen de Error: 0" size 70 color "#FFFFFF" xalign 0.5
+        add "logo"
 
+    # Botones
     vbox:
-        align (0.5, 0.55)    # Posición de los botones
-        spacing 20
+        align (0.5, 0.58)
+        spacing 25
 
-        textbutton "Jugar":
-            xalign 0.5
+        textbutton "Jugar" style "red_button":
             action Start()
 
-        textbutton "Opciones":
-            xalign 0.5
+        textbutton "Opciones" style "red_button":
             action ShowMenu("preferences")
 
-        textbutton "Salir":
-            xalign 0.5
+        textbutton "Salir" style "red_button":
             action Quit(confirm=True)
+
+
+screen preferences():
+
+    tag menu
+
+    frame:
+        background "#0009"
+        xalign 0.5
+        yalign 0.2
+        padding 40
+
+        vbox:
+            spacing 25
+            xalign 0.5
+
+            text "Opciones" size 55 color "#FFFFFF"
+
+            text "Volumen Música" size 28 color "#DDDDDD"
+            bar value Preference("music volume") xmaximum 400
+
+            text "Volumen Sonido" size 28 color "#DDDDDD"
+            bar value Preference("sound volume") xmaximum 400
+
+            text "Volumen Voz" size 28 color "#DDDDDD"
+            bar value Preference("voice volume") xmaximum 400
+
+            textbutton "Silenciar Todo" action Preference("all mute", "toggle") style "menu_button"
+
+            textbutton "Volver" action Return() style "menu_button"
+
 
 
 
@@ -1630,3 +1658,13 @@ style slider_vbox:
 style slider_slider:
     variant "small"
     xsize 900
+
+style red_button is default:
+    size 35
+    xalign 0.5
+    color "#cccccc"          # texto normal
+    hover_color "#ff2020"    # rojo al hover
+    idle_color "#cccccc"     # gris claro
+    background None
+    hover_background None
+style red_button_text is red_button
