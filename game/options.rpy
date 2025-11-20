@@ -555,3 +555,10 @@ init python:
 ## de la aplicación. Se puede encontrar en la consola de desarrollador de Google
 ## Play, en "Monetizar" > "Configuración de la monetización" > "Licencias".
 
+# define build.google_play_key = "..."
+
+
+## Los nombres de usuario y de proyecto asociados con un proyecto itch.io,
+## separados por una barra.
+
+# define build.itch_project = "renpytom/test-project"
