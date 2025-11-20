@@ -160,6 +160,7 @@ define config.window_icon = "gui/window_icon.png"
 ## distribución.
 
 init python:
+    
 
     ## Las funciones siguientes toman patrones de archivos. No son relevantes
     ## las mayúsculas o minúsculas. Son relativos al directorio base, con o sin
@@ -198,16 +199,359 @@ init python:
 
     build.documentation('*.html')
     build.documentation('*.txt')
+init python:
+    import random
+    import time
+    
+    # ==========================================================================
+    # CONFIGURACIÓN DE TECLAS
+    # ==========================================================================
+    
+    # Redefinir la tecla ESC para ir al menú principal en lugar de opciones
+    config.keymap['game_menu'] = []  # Quitar el comportamiento por defecto de ESC
+    config.keymap['hide_windows'] = []  # Opcional: quitar hide windows si quieres
+    
+    # Agregar ESC para ir directamente al menú principal
+    config.keymap['screenshot'] = ['s']  # Dejar screenshot en 's'
+    
+    # ==========================================================================
+    # SISTEMA DE DETECCIÓN DE MINIMIZACIÓN DE VENTANA
+    # ==========================================================================
+    
+    def check_window_minimized():
+        """
+        Verifica si la ventana está minimizada.
+        Si se minimiza durante una partida activa, cierra el juego inmediatamente.
+        """
+        global tiempo_activo
+        
+        # Solo verificar si hay una partida activa
+        if tiempo_activo:
+            import pygame
+            try:
+                # Verificar si la ventana está minimizada o perdió el foco
+                # pygame.APPACTIVE detecta si la aplicación está activa
+                if pygame.event.peek(pygame.ACTIVEEVENT):
+                    for event in pygame.event.get(pygame.ACTIVEEVENT):
+                        # Si el evento indica que se minimizó o perdió foco
+                        if event.state & 2 == 0:  # Bit 2 = ventana activa
+                            # Ventana minimizada o inactiva - cerrar inmediatamente
+                            renpy.quit(relaunch=False, save=False)
+            except:
+                pass
+    
+    # Configurar callback periódico para verificar constantemente
+    config.periodic_callbacks = [check_window_minimized]
+    
+    # ==========================================================================
+    # SISTEMA DE TIEMPO
+    # ==========================================================================
+    
+    # Variable para rastrear tiempo de escritura
+    tiempo_inicio_escritura = 0
+    escribiendo_respuesta = False
+    
+    def actualizar_tiempo():
+        """
+        Reduce el tiempo restante en 1 segundo.
+        Si llega a 0, salta a game over.
+        """
+        global tiempo_restante, tiempo_activo
+        
+        if tiempo_activo and tiempo_restante > 0:
+            tiempo_restante -= 1
+            
+            # Verificar si se acabó el tiempo
+            if tiempo_restante <= 0:
+                tiempo_activo = False
+                # Ocultar todas las pantallas antes del jump
+                renpy.hide_screen("cronometro")
+                renpy.hide_screen("distorsion_cordura")
+                renpy.hide_screen("ver_problema")
+                renpy.hide_screen("ingresar_respuesta")
+                renpy.jump("game_over_tiempo")
+    
+    def penalizar_tiempo(segundos=900):
+        """
+        Reduce el tiempo restante por respuesta incorrecta.
+        Muestra un mensaje según el nivel de cordura (tiempo restante).
+        Por defecto quita 15 minutos (900 segundos).
+        Si el tiempo llega a 0 o menos, game over inmediato.
+        """
+        global tiempo_restante, tiempo_activo
+        
+        # Reducir tiempo
+        tiempo_restante = max(0, tiempo_restante - segundos)
+        
+        # SI EL TIEMPO LLEGÓ A 0 O MENOS, GAME OVER INMEDIATO
+        if tiempo_restante <= 0:
+            tiempo_activo = False
+            # Ocultar todas las pantallas antes del jump
+            renpy.hide_screen("cronometro")
+            renpy.hide_screen("distorsion_cordura")
+            renpy.hide_screen("ver_problema")
+            renpy.hide_screen("ingresar_respuesta")
+            renpy.jump("game_over_tiempo")
+            return  # Salir de la función para evitar mostrar mensaje
+        
+        # Mensajes según el tiempo restante (cordura)
+        if tiempo_restante > 14400:  # Más de 4 horas
+            mensajes = [
+                "Tengo que concentrarme...",
+                "Vamos, puedo hacerlo mejor.",
+                "No puedo fallar otra vez.",
+                "Cálmate... piensa bien.",
+            ]
+        elif tiempo_restante > 10800:  # Entre 3-4 horas
+            mensajes = [
+                "Esto se está poniendo difícil...",
+                "El tiempo se me escapa...",
+                "Necesito enfocarme más.",
+                "No... otro error...",
+            ]
+        elif tiempo_restante > 7200:  # Entre 2-3 horas
+            mensajes = [
+                "Mi cabeza empieza a doler...",
+                "¿Cuánto tiempo llevo aquí?",
+                "Los números... se mezclan...",
+                "Debo... resistir...",
+            ]
+        elif tiempo_restante > 3600:  # Entre 1-2 horas
+            mensajes = [
+                "No... no puedo pensar bien...",
+                "¿Por qué sigo fallando?",
+                "Mi mente se nubla...",
+                "Esto no puede estar pasando...",
+                "Las paredes... ¿se están moviendo?",
+            ]
+        elif tiempo_restante > 1800:  # Entre 30min-1 hora
+            mensajes = [
+                "Ya no sé qué es real...",
+                "Los números me persiguen...",
+                "¿Cuánto tiempo... queda?",
+                "Mis manos tiemblan...",
+                "No puedo... respirar bien...",
+            ]
+        elif tiempo_restante > 600:  # Entre 10-30 minutos
+            mensajes = [
+                "TODO SE DESVANECE...",
+                "¿Quién... quién soy?",
+                "LOS NÚMEROS NO TIENEN SENTIDO...",
+                "Mis ojos... arden...",
+                "¿DÓNDE ESTÁ LA SALIDA?",
+            ]
+        else:  # Menos de 10 minutos - CRÍTICO
+            mensajes = [
+                "NO NO NO NO NO...",
+                "¡DÉJENME SALIR!",
+                "YA NO PUEDO MÁS...",
+                "ESTO NO ES REAL...",
+                "¿POR QUÉ NO PUEDO SALIR?",
+            ]
+        
+        # Seleccionar mensaje aleatorio
+        mensaje = random.choice(mensajes)
+        renpy.notify(mensaje)
+    
+    # ==========================================================================
+    # SISTEMA DE PROBLEMAS ALEATORIOS
+    # ==========================================================================
+    
+    # --------------------------------------------------------------------------
+    # Inicialización de niveles
+    # --------------------------------------------------------------------------
+    
+    def inicializar_niveles_aleatorios():
+        """
+        Inicializa el sistema de niveles aleatorios.
+        - Obtiene todos los niveles disponibles del diccionario 'problems'
+        - Los mezcla aleatoriamente
+        - Selecciona el primer nivel
+        """
+        global niveles_disponibles, total_niveles, current_level
+        
+        # Obtener todos los nombres de niveles (carpetas)
+        niveles_disponibles = list(problems.keys())
+        
+        # Mezclar aleatoriamente para orden diferente en cada partida
+        random.shuffle(niveles_disponibles)
+        
+        total_niveles = len(niveles_disponibles)
+        
+        # Seleccionar el primer nivel
+        if niveles_disponibles:
+            current_level = niveles_disponibles[0]
+    
+    # --------------------------------------------------------------------------
+    # Selección de niveles y problemas
+    # --------------------------------------------------------------------------
+    
+    def seleccionar_siguiente_nivel():
+        """
+        Selecciona el siguiente nivel no completado de la lista aleatoria.
+        """
+        global current_level, niveles_disponibles, niveles_completados
+        
+        # Encontrar niveles no completados
+        niveles_restantes = [n for n in niveles_disponibles if n not in niveles_completados]
+        
+        if niveles_restantes:
+            current_level = niveles_restantes[0]
+    
+    def seleccionar_problema_aleatorio():
+        """
+        Selecciona UN problema aleatorio del nivel actual.
+        El problema se elige entre 1 y total_problemas del nivel.
+        """
+        global current_problem_index, current_level
+        
+        # Obtener total de problemas del nivel actual
+        total_problemas = problems[current_level]["total_problemas"]
+        
+        # Seleccionar UN índice aleatorio (del 1 al total)
+        current_problem_index = random.randint(1, total_problemas)
+    
+    # --------------------------------------------------------------------------
+    # Visualización de problemas
+    # --------------------------------------------------------------------------
+    
+    def mostrar_problema_actual():
+        """
+        Muestra la imagen del problema actual en pantalla.
+        Construye la ruta: problemas/[carpeta]/[numero].png
+        """
+        # Construir la ruta de la imagen
+        carpeta = "problemas/" + current_level + "/"
+        imagen = str(current_problem_index) + ".png"
+        ruta_completa = carpeta + imagen
+        
+        # Mostrar la imagen del problema
+        renpy.show("problem_image", at_list=[renpy.store.truecenter], what=renpy.displayable(ruta_completa))
+    
+    # --------------------------------------------------------------------------
+    # Gestión de respuestas
+    # --------------------------------------------------------------------------
+    
+    def get_current_answers():
+        """
+        Obtiene las respuestas correctas del problema actual.
+        Returns: dict con {"respuesta1": valor, "respuesta2": valor}
+        """
+        return problems[current_level]["respuestas"][current_problem_index]
+    
+    def check_answer():
+        """
+        Valida las respuestas del jugador contra las respuestas correctas.
+        - Verifica que ambas respuestas estén ingresadas
+        - Compara con las respuestas correctas
+        - Salta a la etiqueta correspondiente (correcta/incorrecta)
+        """
+        global player_answer1, player_answer2
+        
+        # Verificar que ambas respuestas tengan contenido
+        if not player_answer1.strip() or not player_answer2.strip():
+            renpy.notify("Debes ingresar ambas respuestas")
+            return
+
+        # Obtener respuestas correctas
+        respuestas = get_current_answers()
+        r1 = respuestas["respuesta1"]
+        r2 = respuestas["respuesta2"]
+
+        # Validar respuestas
+        if player_answer1.strip() == r1 and player_answer2.strip() == r2:
+            # Respuesta correcta
+            renpy.hide_screen("ingresar_respuesta")
+            renpy.hide_screen("ver_problema")
+            renpy.jump("respuesta_correcta")
+        else:
+            # Respuesta incorrecta - APLICAR PENALIZACIÓN
+            penalizar_tiempo(900)  # Quitar 15 minutos
+
+    # --------------------------------------------------------------------------
+    # Edición de respuestas
+    # --------------------------------------------------------------------------
+    
+    def edit_answer1():
+        """
+        Permite editar la respuesta 1 usando un input modal.
+        Solo acepta números, puntos y guiones.
+        REGISTRA EL TIEMPO QUE TOMAS ESCRIBIENDO Y LO RESTA DEL CRONÓMETRO.
+        """
+        global player_answer1, tiempo_restante, tiempo_inicio_escritura, escribiendo_respuesta
+        
+        # Marcar que empezó a escribir
+        escribiendo_respuesta = True
+        tiempo_inicio_escritura = time.time()
+        
+        v = renpy.invoke_in_new_context(
+            renpy.input, 
+            "Respuesta 1:", 
+            default=player_answer1, 
+            allow="0123456789.-"
+        )
+        
+        # Calcular tiempo que pasó escribiendo
+        tiempo_fin_escritura = time.time()
+        segundos_escribiendo = int(tiempo_fin_escritura - tiempo_inicio_escritura)
+        
+        # RESTAR el tiempo de escritura del cronómetro
+        tiempo_restante = max(0, tiempo_restante - segundos_escribiendo)
+        
+        # Verificar si se acabó el tiempo mientras escribía
+        if tiempo_restante <= 0:
+            renpy.hide_screen("ingresar_respuesta")
+            renpy.hide_screen("ver_problema")
+            renpy.jump("game_over_tiempo")
+            return
+        
+        escribiendo_respuesta = False
+        
+        if v is not None:
+            player_answer1 = v
+        renpy.restart_interaction()
+
+    def edit_answer2():
+        """
+        Permite editar la respuesta 2 usando un input modal.
+        Solo acepta números, puntos y guiones.
+        REGISTRA EL TIEMPO QUE TOMAS ESCRIBIENDO Y LO RESTA DEL CRONÓMETRO.
+        """
+        global player_answer2, tiempo_restante, tiempo_inicio_escritura, escribiendo_respuesta
+        
+        # Marcar que empezó a escribir
+        escribiendo_respuesta = True
+        tiempo_inicio_escritura = time.time()
+        
+        v = renpy.invoke_in_new_context(
+            renpy.input, 
+            "Respuesta 2:", 
+            default=player_answer2, 
+            allow="0123456789.-"
+        )
+        
+        # Calcular tiempo que pasó escribiendo
+        tiempo_fin_escritura = time.time()
+        segundos_escribiendo = int(tiempo_fin_escritura - tiempo_inicio_escritura)
+        
+        # RESTAR el tiempo de escritura del cronómetro
+        tiempo_restante = max(0, tiempo_restante - segundos_escribiendo)
+        
+        # Verificar si se acabó el tiempo mientras escribía
+        if tiempo_restante <= 0:
+            renpy.hide_screen("ingresar_respuesta")
+            renpy.hide_screen("ver_problema")
+            renpy.jump("game_over_tiempo")
+            return
+        
+        escribiendo_respuesta = False
+        
+        if v is not None:
+            player_answer2 = v
+        renpy.restart_interaction()
 
 
 ## Se necesita una clave de licencia de Google Play para realizar compras dentro
 ## de la aplicación. Se puede encontrar en la consola de desarrollador de Google
 ## Play, en "Monetizar" > "Configuración de la monetización" > "Licencias".
 
-# define build.google_play_key = "..."
-
-
-## Los nombres de usuario y de proyecto asociados con un proyecto itch.io,
-## separados por una barra.
-
-# define build.itch_project = "renpytom/test-project"

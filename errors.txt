@@ -2,13 +2,9 @@
 errors listed below, and try again.
 
 
-File "game/screens.rpy", line 1675: keyword argument 'xalign' is incompatible with 'align'.
-    xalign 0.5
-          ^
-
-File "game/screens.rpy", line 1676: keyword argument 'yalign' is incompatible with 'align'.
-    yalign 0.5
-          ^
+File "game/options.rpy", line 462: unmatched ')'
+    """ tiempo_restante - segundos_escribiendo)
+                                              ^
 
 Ren'Py Version: Ren'Py 8.5.0.25111603
-Wed Nov 19 12:51:51 2025
+Thu Nov 20 15:38:59 2025

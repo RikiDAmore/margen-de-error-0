@@ -1,24 +1,14 @@
 ﻿I'm sorry, but an uncaught exception occurred.
 
 While running game code:
-  File "game/script.rpy", line 13, in script
+  File "game/script.rpy", line 88, in script
     call screen name_input
-  File "game/screens.rpy", line 1671, in execute
-    screen name_input():
-  File "game/screens.rpy", line 1671, in execute
-    screen name_input():
-  File "game/screens.rpy", line 1673, in execute
-    frame:
-  File "game/screens.rpy", line 1676, in execute
-    vbox:
-  File "game/screens.rpy", line 1682, in execute
-    input:
-Exception: The 'tmp_name' variable does not exist.
+Exception: Invalid key specifier escape
 
 -- Full Traceback ------------------------------------------------------------
 
 Traceback (most recent call last):
-  File "game/script.rpy", line 13, in script
+  File "game/script.rpy", line 88, in script
     call screen name_input
   File "renpy/ast.py", line 2241, in execute
     self.call("execute")
@@ -48,51 +38,35 @@ Traceback (most recent call last):
         ^^^^^^^^^
     )
     ^
-  File "renpy/display/core.py", line 2655, in interact_core
-    root_widget.visit_all(lambda d: d.per_interact())
-    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "renpy/display/displayable.py", line 457, in visit_all
-    d.visit_all(callback, seen)
-    ~~~~~~~~~~~^^^^^^^^^^^^^^^^
-  File "renpy/display/displayable.py", line 457, in visit_all
-    d.visit_all(callback, seen)
-    ~~~~~~~~~~~^^^^^^^^^^^^^^^^
-  File "renpy/display/displayable.py", line 457, in visit_all
-    d.visit_all(callback, seen)
-    ~~~~~~~~~~~^^^^^^^^^^^^^^^^
-  File "renpy/display/screen.py", line 503, in visit_all
-    callback(self)
-    ~~~~~~~~^^^^^^
-  File "renpy/display/core.py", line 2655, in <lambda>
-    root_widget.visit_all(lambda d: d.per_interact())
-                                    ~~~~~~~~~~~~~~^^ 
-  File "renpy/display/screen.py", line 514, in per_interact
-    self.update()
-    ~~~~~~~~~~~^^
-  File "renpy/display/screen.py", line 715, in update
-    self.screen.function(**self.scope)
-    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
-  File "game/screens.rpy", line 1671, in execute
-    screen name_input():
-  File "game/screens.rpy", line 1671, in execute
-    screen name_input():
-  File "game/screens.rpy", line 1673, in execute
-    frame:
-  File "game/screens.rpy", line 1676, in execute
-    vbox:
-  File "game/screens.rpy", line 1682, in execute
-    input:
-  File "renpy/display/behavior.py", line 1445, in __init__
-    default = value.get_text()
-              ~~~~~~~~~~~~~~^^
-  File "renpy/common/00inputvalues.rpy", line 188, in get_text
-    return _get_field(self.object, self.field, self.kind)
-           ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "renpy/common/00action_data.rpy", line 36, in _get_field
-    raise Exception("The {!r} {} does not exist.".format(name, kind))
-Exception: The 'tmp_name' variable does not exist.
+  File "renpy/display/core.py", line 3203, in interact_core
+    rv = root_widget.event(ev, x, y, 0)
+         ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "renpy/display/layout.py", line 1281, in event
+    rv = i.event(ev, x - xo, y - yo, cst)
+         ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "renpy/display/layout.py", line 1281, in event
+    rv = i.event(ev, x - xo, y - yo, cst)
+         ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "renpy/display/layout.py", line 1281, in event
+    rv = i.event(ev, x - xo, y - yo, cst)
+         ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "renpy/display/screen.py", line 805, in event
+    rv = self.child.event(ev, x, y, st)
+         ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "renpy/display/layout.py", line 1281, in event
+    rv = i.event(ev, x - xo, y - yo, cst)
+         ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "renpy/display/behavior.py", line 556, in event
+    if map_event(ev, name):
+       ~~~~~~~~~^^^^^^^^^^ 
+  File "renpy/display/behavior.py", line 312, in map_event
+    check_code = eval("lambda ev : " + compile_event(keysym, True), globals())
+                                       ~~~~~~~~~~~~~^^^^^^^^^^^^^^            
+  File "renpy/display/behavior.py", line 198, in compile_event
+    raise Exception("Invalid key specifier %s" % key)
+Exception: Invalid key specifier escape
 
 Windows-10-10.0.19045-SP0 AMD64
 Ren'Py 8.5.0.25111603
 Margen de Error 0 1.0
-Wed Nov 19 12:52:32 2025
+Thu Nov 20 15:42:34 2025

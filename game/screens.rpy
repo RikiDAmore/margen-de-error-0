@@ -1,4 +1,54 @@
-﻿################################################################################
+﻿# ===============================
+# PANTALLA: Ingresar respuesta
+# ===============================
+
+screen ingresar_respuesta(tag="menu"):
+    modal True
+    zorder 200
+
+    # Fondo oscuro para toda la pantalla (menos oscuro)
+    add Solid("#0008")
+
+    frame:
+        xalign 0.5
+        yalign 0.5
+        xpadding 40
+        ypadding 40
+        background "#2a2a2aee"  # Fondo gris más claro
+
+        vbox:
+            spacing 15
+
+            text "Ingresa tus respuestas" size 30 color "#fff"
+
+            text "Respuesta 1:" color "#ddd"
+            hbox:
+                spacing 10
+                text "[player_answer1]" size 20 color "#ffffff" xminimum 200
+                textbutton "Editar" action Function(edit_answer1)
+
+            text "Respuesta 2:" color "#ddd"
+            hbox:
+                spacing 10
+                text "[player_answer2]" size 20 color "#ffffff" xminimum 200
+                textbutton "Editar" action Function(edit_answer2)
+
+            null height 20
+
+            # Mostrar advertencia si falta alguna respuesta
+            if not player_answer1.strip() or not player_answer2.strip():
+                text "Debes ingresar ambas respuestas" size 18 color "#ff6666"
+
+            hbox:
+                spacing 20
+                xalign 0.5
+                
+                textbutton "Enviar":
+                    action Function(check_answer)
+                textbutton "Cancelar":
+                    action [Hide("ingresar_respuesta"), Show("ver_problema")]
+
+################################################################################
 ## Inicialización
 ################################################################################
 
@@ -166,7 +216,7 @@ style say_dialogue:
 ## Pantalla usada para visualizar 'renpy.input'. El parámetro 'prompt' se usa
 ## para pasar el texto presentado.
 ##
-## Esta pantalla debe crear un displayable 'input' con id "input" para aceptar
+## Esta pantalla debe crear un displayable 'input' with id "input" para aceptar
 ## diversos parámetros de entrada.
 ##
 ## https://www.renpy.org/doc/html/screen_special.html#input
@@ -246,14 +296,11 @@ screen quick_menu():
             style_prefix "quick"
             style "quick_menu"
 
-            textbutton _("Atrás") action Rollback()
-            textbutton _("Historial") action ShowMenu('history')
-            textbutton _("Saltar") action Skip() alternate Skip(fast=True, confirm=True)
-            textbutton _("Auto") action Preference("auto-forward", "toggle")
-            textbutton _("Guardar") action ShowMenu('save')
-            textbutton _("Guardar R.") action QuickSave()
-            textbutton _("Cargar R.") action QuickLoad()
-            textbutton _("Prefs.") action ShowMenu('preferences')
+            textbutton _("Opciones") action ShowMenu('preferences')
+            textbutton _("Menú") action MainMenu()
+    
+    # Capturar la tecla ESC para ir al menú principal (sintaxis correcta)
+    key "K_ESCAPE" action MainMenu()
 
 
 ## Este código asegura que la pantalla 'quick_menu' se muestra en el juego,
@@ -303,28 +350,9 @@ screen navigation():
 
         else:
 
-            textbutton _("Historial") action ShowMenu("history")
-
-            textbutton _("Guardar") action ShowMenu("save")
-
-        textbutton _("Cargar") action ShowMenu("load")
-
-        textbutton _("Opciones") action ShowMenu("preferences")
-
-        if _in_replay:
-
-            textbutton _("Finaliza repetición") action EndReplay(confirm=True)
-
-        elif not main_menu:
-
             textbutton _("Menú principal") action MainMenu()
 
-        textbutton _("Acerca de") action ShowMenu("about")
-
-        if renpy.variant("pc") or (renpy.variant("web") and not renpy.variant("mobile")):
-
-            ## La ayuda no es necesaria ni relevante en dispositivos móviles.
-            textbutton _("Ayuda") action ShowMenu("help")
+        textbutton _("Opciones") action ShowMenu("preferences")
 
         if renpy.variant("pc"):
 
@@ -378,38 +406,6 @@ screen main_menu():
 
         textbutton "Salir" style "red_button":
             action Quit(confirm=True)
-
-
-screen preferences():
-
-    tag menu
-
-    frame:
-        background "#0009"
-        xalign 0.5
-        yalign 0.2
-        padding 40
-
-        vbox:
-            spacing 25
-            xalign 0.5
-
-            text "Opciones" size 55 color "#FFFFFF"
-
-            text "Volumen Música" size 28 color "#DDDDDD"
-            bar value Preference("music volume") xmaximum 400
-
-            text "Volumen Sonido" size 28 color "#DDDDDD"
-            bar value Preference("sound volume") xmaximum 400
-
-            text "Volumen Voz" size 28 color "#DDDDDD"
-            bar value Preference("voice volume") xmaximum 400
-
-            textbutton "Silenciar Todo" action Preference("all mute", "toggle") style "menu_button"
-
-            textbutton "Volver" action Return() style "menu_button"
-
-
 
 
 style main_menu_frame is empty
@@ -774,78 +770,54 @@ screen preferences():
     use game_menu(_("Opciones"), scroll="viewport"):
 
         vbox:
+            spacing 40
+            xalign 0.5
 
-            hbox:
-                box_wrap True
-
-                if renpy.variant("pc") or renpy.variant("web"):
-
-                    vbox:
-                        style_prefix "radio"
-                        label _("Pantalla")
-                        textbutton _("Ventana") action Preference("display", "window")
-                        textbutton _("Pantalla completa") action Preference("display", "fullscreen")
-
-                vbox:
-                    style_prefix "check"
-                    label _("Saltar")
-                    textbutton _("Texto no visto") action Preference("skip", "toggle")
-                    textbutton _("Tras elecciones") action Preference("after choices", "toggle")
-                    textbutton _("Transiciones") action InvertSelected(Preference("transitions", "toggle"))
-
-                ## Aquí se pueden añadir 'vboxes' adicionales del tipo
-                ## "radio_pref" o "check_pref" para nuevas preferencias.
-
-            null height (4 * gui.pref_spacing)
-
+            # Solo controles de volumen
             hbox:
                 style_prefix "slider"
                 box_wrap True
+                xalign 0.5
+                spacing 50
 
                 vbox:
-
-                    label _("Veloc. texto")
-
-                    bar value Preference("text speed")
-
-                    label _("Veloc. autoavance")
-
-                    bar value Preference("auto-forward time")
-
-                vbox:
+                    spacing 25
 
                     if config.has_music:
-                        label _("Volumen música")
-
-                        hbox:
-                            bar value Preference("music volume")
+                        vbox:
+                            spacing 10
+                            label _("Volumen Música"):
+                                xalign 0.5
+                            bar value Preference("music volume"):
+                                xalign 0.5
+                                xsize 400
 
                     if config.has_sound:
-
-                        label _("Volumen sonido")
-
-                        hbox:
-                            bar value Preference("sound volume")
-
-                            if config.sample_sound:
-                                textbutton _("Prueba") action Play("sound", config.sample_sound)
-
+                        vbox:
+                            spacing 10
+                            label _("Volumen Sonido"):
+                                xalign 0.5
+                            bar value Preference("sound volume"):
+                                xalign 0.5
+                                xsize 400
 
                     if config.has_voice:
-                        label _("Volumen voz")
+                        vbox:
+                            spacing 10
+                            label _("Volumen Voz"):
+                                xalign 0.5
+                            bar value Preference("voice volume"):
+                                xalign 0.5
+                                xsize 400
 
-                        hbox:
-                            bar value Preference("voice volume")
-
-                            if config.sample_voice:
-                                textbutton _("Prueba") action Play("voice", config.sample_voice)
-
+                    # Botón para silenciar todo
                     if config.has_music or config.has_sound or config.has_voice:
-                        null height gui.pref_spacing
-
-                        textbutton _("Silenciar todo"):
+                        null height 20
+                        
+                        textbutton _("Silenciar Todo"):
                             action Preference("all mute", "toggle")
                             style "mute_all_button"
+                            xalign 0.5
 
 
 style pref_label is gui_label
@@ -1015,136 +987,11 @@ style history_label_text:
 ## otras pantallas con el contenido de la ayuda ('keyboard_help', 'mouse_help',
 ## y 'gamepad_help').
 
-screen help():
-
-    tag menu
-
-    default device = "keyboard"
-
-    use game_menu(_("Ayuda"), scroll="viewport"):
-
-        style_prefix "help"
-
-        vbox:
-            spacing 23
-
-            hbox:
-
-                textbutton _("Teclado") action SetScreenVariable("device", "keyboard")
-                textbutton _("Ratón") action SetScreenVariable("device", "mouse")
-
-                if GamepadExists():
-                    textbutton _("Mando") action SetScreenVariable("device", "gamepad")
-
-            if device == "keyboard":
-                use keyboard_help
-            elif device == "mouse":
-                use mouse_help
-            elif device == "gamepad":
-                use gamepad_help
 
 
-screen keyboard_help():
-
-    hbox:
-        label _("Intro")
-        text _("Avanza el diálogo y activa la interfaz.")
-
-    hbox:
-        label _("Espacio")
-        text _("Avanza el diálogo sin seleccionar opciones.")
-
-    hbox:
-        label _("Teclas de flecha")
-        text _("Navega la interfaz.")
-
-    hbox:
-        label _("Escape")
-        text _("Accede al menú del juego.")
-
-    hbox:
-        label _("Ctrl")
-        text _("Salta el diálogo mientras se presiona.")
-
-    hbox:
-        label _("Tabulador")
-        text _("Activa/desactiva el salto de diálogo.")
-
-    hbox:
-        label _("Av. pág.")
-        text _("Retrocede al diálogo anterior.")
-
-    hbox:
-        label _("Re. pág.")
-        text _("Avanza hacia el diálogo siguiente.")
-
-    hbox:
-        label "H"
-        text _("Oculta la interfaz.")
-
-    hbox:
-        label "S"
-        text _("Captura la pantalla.")
-
-    hbox:
-        label "V"
-        text _("Activa/desactiva la asistencia por {a=https://www.renpy.org/l/voicing}voz-automática{/a}.")
-
-    hbox:
-        label "Shift+A"
-        text _("Abre el menú de accesibilidad.")
 
 
-screen mouse_help():
 
-    hbox:
-        label _("Clic izquierdo")
-        text _("Avanza el diálogo y activa la interfaz.")
-
-    hbox:
-        label _("Clic medio")
-        text _("Oculta la interfaz.")
-
-    hbox:
-        label _("Clic derecho")
-        text _("Accede al menú del juego.")
-
-    hbox:
-        label _("Rueda del ratón arriba")
-        text _("Retrocede al diálogo anterior.")
-
-    hbox:
-        label _("Rueda del ratón abajo")
-        text _("Avanza hacia el diálogo siguiente.")
-
-
-screen gamepad_help():
-
-    hbox:
-        label _("Gatillo derecho\nA/Botón inferior")
-        text _("Avanza el diálogo y activa la interfaz.")
-
-    hbox:
-        label _("Gatillo izquierdo\nBotón sup. frontal izq.")
-        text _("Retrocede al diálogo anterior.")
-
-    hbox:
-        label _("Botón sup. frontal der.")
-        text _("Avanza hacia el diálogo siguiente.")
-
-    hbox:
-        label _("D-Pad, Sticks")
-        text _("Navega la interfaz.")
-
-    hbox:
-        label _("Inicio, Guía, B/Botón Derecho")
-        text _("Accede al menú del juego.")
-
-    hbox:
-        label _("Y/Botón superior")
-        text _("Oculta la interfaz.")
-
-    textbutton _("Calibrar") action GamepadCalibrate()
 
 
 style help_button is gui_button
@@ -1305,10 +1152,15 @@ style skip_triangle:
 
 screen notify(message):
 
-    zorder 100
+    zorder 300
     style_prefix "notify"
 
     frame at notify_appear:
+        xalign 0.5
+        yalign 0.5
+        background "#000000dd"
+        padding (40, 20)
+        
         text "[message!tq]"
 
     timer 3.25 action Hide('notify')
@@ -1317,22 +1169,24 @@ screen notify(message):
 transform notify_appear:
     on show:
         alpha 0
-        linear .25 alpha 1.0
+        yoffset -20
+        linear .25 alpha 1.0 yoffset 0
     on hide:
-        linear .5 alpha 0.0
+        linear .5 alpha 0.0 yoffset 20
 
 
 style notify_frame is empty
 style notify_text is gui_text
 
 style notify_frame:
-    ypos gui.notify_ypos
-
-    background Frame("gui/notify.png", gui.notify_frame_borders, tile=gui.frame_tile)
-    padding gui.notify_frame_borders.padding
+    # Removemos ypos para que use el xalign/yalign del screen
+    background None
 
 style notify_text:
-    properties gui.text_properties("notify")
+    size 28
+    color "#ffffff"
+    text_align 0.5
+    xalign 0.5
 
 
 ## Pantalla NVL ################################################################
@@ -1442,23 +1296,6 @@ style nvl_thought:
     xsize gui.nvl_thought_width
     min_width gui.nvl_thought_width
     textalign gui.nvl_thought_xalign
-    layout ("subtitle" if gui.nvl_text_xalign else "tex")
-
-style nvl_button:
-    properties gui.button_properties("nvl_button")
-    xpos gui.nvl_button_xpos
-    xanchor gui.nvl_button_xalign
-
-style nvl_button_text:
-    properties gui.text_properties("nvl_button")
-
-
-## Pantalla de globos ##########################################################
-##
-## La pantalla de burbujas se utiliza para mostrar el diálogo al jugador cuando
-## se utilizan burbujas de diálogo. La pantalla de burbujas toma los mismos
-## parámetros que la pantalla "say", debe crear un visualizable con el id de
-## "what", y puede crear visualizables con los ids "namebox", "who", y "window".
 ##
 ## https://www.renpy.org/doc/html/bubble.html#bubble-screen
 
@@ -1680,12 +1517,268 @@ screen name_input():
             text "Escribe tu nombre:"
 
             input:
-                value VariableInputValue("name")
+                value VariableInputValue("player_name")  # Cambiado de "name" a "player_name"
                 xalign 0.5
 
             textbutton "Aceptar":
-                action [
-                    SetVariable("player_name", name),
-                    Return()
-                ]
+                action Return()  # Simplificado - ya no necesita SetVariable
                 xalign 0.5
+
+# ===============================
+# PANTALLA: Ver problema (imagen)
+# ===============================
+screen ver_problema():
+    modal True
+    zorder 100
+
+    frame:
+        xalign 0.5
+        yalign 0.5
+        background "#2a2a2aee"
+        xpadding 40
+        ypadding 30
+
+        vbox:
+            spacing 25
+
+            text "Nivel: [current_level]" size 25 color "#aaa"
+            text "Niveles completados: [len(niveles_completados)]/[total_niveles]" size 20 color "#888"
+
+            textbutton "Ver el problema":
+                action Show("ver_problem")
+                xalign 0.5
+
+            textbutton "Resolver el problema":
+                action [Hide("ver_problema"), Show("ingresar_respuesta")]
+                xalign 0.5
+
+screen ver_problem():
+    modal True
+    zorder 500
+
+    # Fondo oscuro (menos oscuro)
+    add Solid("#0009")
+
+    # Mostrar imagen del problema actual
+    $ carpeta = "problemas/" + current_level + "/"
+    $ imagen = str(current_problem_index) + ".png"
+    $ ruta_completa = carpeta + imagen
+    
+    add ruta_completa at truecenter
+
+    textbutton "Cerrar":
+        xalign 0.5
+        yalign 0.95
+        action Hide("ver_problem")
+
+
+# ===============================
+# PANTALLA: Cronómetro
+# ===============================
+
+screen cronometro():
+    """
+    Pantalla que muestra el cronómetro regresivo.
+    - Se actualiza cada segundo
+    - Muestra horas:minutos:segundos
+    - Cambia de color cuando queda poco tiempo
+    - Muestra penalización por errores
+    """
+    
+    # Solo mostrar si el tiempo está activo
+    if tiempo_activo:
+        # Timer que reduce el tiempo cada segundo
+        timer 1.0 repeat True action Function(actualizar_tiempo)
+        
+        # Calcular horas, minutos y segundos
+        $ horas = int(tiempo_restante // 3600)
+        $ minutos = int((tiempo_restante % 3600) // 60)
+        $ segundos = int(tiempo_restante % 60)
+        
+        # Determinar color según tiempo restante
+        $ color_tiempo = "#ffffff"  # Blanco normal
+        if tiempo_restante <= 3600:  # Menos de 1 hora
+            $ color_tiempo = "#ffaa00"  # Naranja
+        if tiempo_restante <= 600:   # Menos de 10 minutos
+            $ color_tiempo = "#ff0000"  # Rojo
+        
+        # Mostrar el cronómetro
+        frame:
+            xalign 0.98
+            yalign 0.02
+            background "#00000088"
+            padding (15, 10)
+            
+            vbox:
+                spacing 5
+                
+                text "TIEMPO" size 18 color "#aaaaaa" xalign 0.5
+                text "{:02d}:{:02d}:{:02d}".format(horas, minutos, segundos):
+                    size 32
+                    color color_tiempo
+                    xalign 0.5
+                    bold True
+
+# ===============================
+# PANTALLA: Distorsión de cordura
+# ===============================
+
+screen distorsion_cordura():
+    """
+    Efectos visuales que se intensifican según baja el tiempo.
+    Simula la pérdida de cordura del personaje.
+    """
+    
+    if tiempo_activo:
+        # Efecto de viñeta (oscurecimiento en los bordes)
+        if tiempo_restante <= 7200:  # Menos de 2 horas
+            if tiempo_restante > 3600:
+                $ alpha_vineta = 0.3
+            elif tiempo_restante > 1800:
+                $ alpha_vineta = 0.5
+            else:
+                $ alpha_vineta = 0.7
+                
+            add Solid("#000000"):
+                xalign 0.5
+                yalign 0.5
+                xysize (config.screen_width, config.screen_height)
+                at vineta_efecto
+                alpha alpha_vineta
+        
+        # Efecto de ruido/estática (usando overlay simple)
+        if tiempo_restante <= 3600:  # Menos de 1 hora
+            if tiempo_restante > 1800:
+                $ alpha_ruido = 0.05
+            elif tiempo_restante > 600:
+                $ alpha_ruido = 0.1
+            else:
+                $ alpha_ruido = 0.15
+                
+            add Solid("#808080"):
+                xalign 0.5
+                yalign 0.5
+                xysize (config.screen_width, config.screen_height)
+                at ruido_estatico
+                alpha alpha_ruido
+        
+        # Efecto de sangrado de color (aberración cromática)
+        if tiempo_restante <= 1800:  # Menos de 30 minutos
+            if tiempo_restante > 600:
+                $ alpha_aberracion = 0.05
+            else:
+                $ alpha_aberracion = 0.1
+                
+            add Solid("#ff0000"):
+                xalign 0.5
+                yalign 0.5
+                xysize (config.screen_width, config.screen_height)
+                at aberracion_roja
+                alpha alpha_aberracion
+        
+        # Efecto de distorsión extrema
+        if tiempo_restante <= 600:  # Menos de 10 minutos - CRÍTICO
+            add Solid("#000000"):
+                xalign 0.5
+                yalign 0.5
+                xysize (config.screen_width, config.screen_height)
+                at distorsion_critica
+                alpha 0.2
+            
+            # Parpadeo de pantalla en rojo
+            if tiempo_restante <= 300:  # Menos de 5 minutos
+                add Solid("#ff0000"):
+                    xalign 0.5
+                    yalign 0.5
+                    xysize (config.screen_width, config.screen_height)
+                    at parpadeo_rojo
+                    alpha 0.15
+
+# ===============================
+# TRANSFORMACIONES DE DISTORSIÓN
+# ===============================
+
+# Viñeta (oscurecimiento en bordes)
+transform vineta_efecto:
+    blur 50
+
+# Ruido estático que se mueve
+transform ruido_estatico:
+    xoffset 0
+    yoffset 0
+    block:
+        linear 0.1 xoffset 5 yoffset 3
+        linear 0.1 xoffset -3 yoffset -5
+        linear 0.1 xoffset 2 yoffset -2
+        linear 0.1 xoffset -4 yoffset 4
+        repeat
+
+# Aberración cromática (desplazamiento rojo)
+transform aberracion_roja:
+    xoffset 0
+    block:
+        linear 2.0 xoffset 3
+        linear 2.0 xoffset -3
+        repeat
+
+# Distorsión crítica (zoom y movimiento)
+transform distorsion_critica:
+    zoom 1.0
+    blur 0
+    block:
+        linear 0.5 zoom 1.02 blur 5
+        linear 0.5 zoom 1.0 blur 0
+        linear 0.5 zoom 0.98 blur 5
+        linear 0.5 zoom 1.0 blur 0
+        repeat
+
+# Parpadeo rojo intenso
+transform parpadeo_rojo:
+    alpha 0.0
+    block:
+        linear 0.1 alpha 0.3
+        linear 0.1 alpha 0.0
+        pause 2.0
+        repeat
+
+# ===============================
+# PANTALLA: Game Over
+# ===============================
+
+screen game_over_screen():
+    """
+    Pantalla de game over cuando se acaba el tiempo.
+    """
+    modal True
+    zorder 999
+    
+    # Reproducir música de game over al mostrar la pantalla
+    on "show" action Play("music", "audio/gameover.mp3", fadein=1.0)
+    
+    add Solid("#000000")
+    
+    frame:
+        xalign 0.5
+        yalign 0.5
+        background "#1a1a1aee"
+        xpadding 60
+        ypadding 40
+        
+        vbox:
+            spacing 30
+            xalign 0.5
+            
+            text "SE ACABÓ EL TIEMPO" size 50 color "#ff0000" xalign 0.5 bold True
+            text "No lograste escapar a tiempo..." size 25 color "#ffffff" xalign 0.5
+            
+            null height 20
+            
+            hbox:
+                spacing 30
+                xalign 0.5
+                
+                textbutton "Reintentar":
+                    action [Stop("music", fadeout=1.0), Return(), Jump("start")]
+                    
+                textbutton "Menú Principal":
+                    action [Stop("music", fadeout=1.0), Return(), MainMenu()]
