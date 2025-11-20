@@ -2,9 +2,9 @@
 errors listed below, and try again.
 
 
-File "game/options.rpy", line 462: unmatched ')'
-    """ tiempo_restante - segundos_escribiendo)
-                                              ^
+File "game/screens.rpy", line 1756: 'action' is not a keyword argument or valid child of the screen statement.
+    action Play("music", "audio/gameover.mp3", fadein=1.0)
+          ^
 
 Ren'Py Version: Ren'Py 8.5.0.25111603
-Thu Nov 20 15:38:59 2025
+Thu Nov 20 16:08:57 2025

@@ -1,19 +1,47 @@
-# Ren'Py stuff to ignore
-game/cache/
-*.rpyc
-*.rpyb
-*.bak
-
-# Windows junk
-Thumbs.db
-
-# Editor stuff
-.vscode/
+# Archivos de log de Ren'Py
 *.log
-
-game/saves/
-*.save
-
-errors.txt
 log.txt
 traceback.txt
+errors.txt
+
+# Archivos de trace
+*.trace
+
+# Archivos temporales de Ren'Py
+*.rpyc
+*.rpyb
+*.rpymc
+*.rpy.bak
+*~
+
+# Cache de Ren'Py
+game/cache/
+game/saves/
+game/tmp/
+
+# Archivos de sistema
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Archivos de Python
+*.pyc
+*.pyo
+__pycache__/
+*.py[cod]
+
+# Archivos de compilación
+*.exe
+*.app
+*.dmg
+*.zip
+
+# Carpetas de distribución
+/dist/
+/build/
+
+# Archivos de IDE
+.vscode/
+.idea/
+*.swp
+*.swo
