@@ -1,8 +1,12 @@
-﻿define name = ""
-default player_name = ""
+﻿default player_name = ""
 default tiempo = 21600
 default tiempo_restante = 21600
 default tiempo_activo = False
+default deteccion_ventana_activa = True
+default comandos_debug_activos = False
+default persistent.juego_completado = False
+default persistent.modo_debug_desbloqueado = False
+image ojo_animado = Movie(play="images/ojo.webm", loop=True)
 
 default problems = {
     "Interpolacion": {
@@ -25,7 +29,7 @@ default problems = {
         "respuestas": {
             1: {"respuesta1": "1.7572", "respuesta2": "0.40"},
             2: {"respuesta1": "1.4936", "respuesta2": "1"},
-            3: {"respuesta1": "1.2647", "respuesta2": "0.01195"},
+            3: {"respuesta1": "1.2647", "respuesta2": "0.0119"},
         }
     },
     "Ecuaciones No Lineales": {
@@ -85,6 +89,14 @@ label start:
 
     $ tiempo_activo = True
     $ tiempo_restante = tiempo
+    $ ventana_cambiada = False
+    
+    python:
+        import pygame
+        try:
+            ultimo_estado_foco = pygame.key.get_focused()
+        except:
+            ultimo_estado_foco = True
 
     n "..."
 
@@ -176,13 +188,58 @@ label continue_problema1:
         
         pause
     else:
-        $ tiempo_activo = False
         hide screen cronometro
         hide screen distorsion_cordura
         
         n "Se ha abierto la puerta..."
-        n "Salgo del salon, y me dirijo a la salida para no volver nunca mas..."
-        return
+        n "Salgo del salón con cautela."
+        
+        scene black
+        with Dissolve(1.0)
+        
+        scene corredor
+        with Dissolve(1.0)
+        
+        n "Me encuentro en un corredor oscuro."
+        n "Las paredes están llenas de grietas y el aire se siente pesado."
+        n "Al final del corredor veo otra puerta."
+        n "Me acerco y... está cerrada también."
+        n "Hay un candado digital con un teclado."
+        n "A un lado hay una nota pegada en la pared."
+        
+        show expression Solid("#0008") as overlay
+        show hoja at truecenter
+        play sound "audio/hoja.mp3"
+        with Dissolve(0.5)
+        ""
+        
+        n "\"Solo un problema más...\""
+        
+        hide hoja
+        hide overlay
+        with Dissolve(0.5)
+        
+        n "Veo que en la pared hay un problema escrito con... ¿sangre?"
+        n "Necesito resolverlo para salir de aquí."
+        
+        n "Mi corazón late rápido... la desesperación me invade."
+        n "Tengo que salir de aquí... ¡YA!"
+        
+        $ tiempo_restante = 3600  # Reducir el tiempo a 1 hora (3600 segundos)
+        
+        $ seleccionar_problema_aleatorio()
+        $ mostrar_problema_actual()
+        
+        window hide
+        $ _window = False
+        hide problem_image
+        with Dissolve(0.5)
+        show screen ver_problema
+        show screen cronometro
+        show screen distorsion_cordura
+        with Dissolve(0.5)
+        
+        pause
 
 label game_over_tiempo:
     $ tiempo_activo = False
@@ -194,11 +251,15 @@ label game_over_tiempo:
     hide screen ver_problem
     
     stop music fadeout 1.0
-    play music "audio/gameover.mp3" fadein 1.0
     
     scene black with Dissolve(1.0)
+    pause 1.0
     
-    call screen game_over_screen
+    show screen game_over_screen with Dissolve(1.0)
+    
+    pause
+    
+    hide screen game_over_screen
     
     stop music fadeout 1.0
     
@@ -209,14 +270,65 @@ label respuesta_correcta:
     $ player_answer2 = ""
     $ player_answer3 = ""
     $ player_answer4 = ""
-    jump continue_problema1
+    
+    # Verificar si estamos en el corredor (después de los 4 niveles)
+    if len(niveles_completados) >= total_niveles:
+        jump corredor_completado
+    else:
+        jump continue_problema1
 
-label respuesta_incorrecta:
-    "No sucedió nada..."
-    $ player_answer1 = ""
-    $ player_answer2 = ""
-    $ player_answer3 = ""
-    $ player_answer4 = ""
+label corredor_completado:
+    $ tiempo_activo = False
+    $ persistent.juego_completado = True
+    hide screen ver_problema
+    hide screen ingresar_respuesta
+    hide screen ver_problem
+    hide screen cronometro
+    hide screen distorsion_cordura
+    
+    play sound "audio/click.mp3"
+    n "Escucho un último click."
+    n "La puerta se abre lentamente..."
+    
+    scene black
+    with Dissolve(2.0)
+    
+    n "Salgo corriendo sin mirar atrás."
+    n "Finalmente... soy libre."
+    
+    scene black
+    with Dissolve(1.0)
+    
+    pause 1.0
+    
+    show text "{size=40}{color=#ffffff}¡Felicidades!{/color}{/size}\n\n{size=25}Has completado el juego{/size}\n\n{size=20}Ahora tienes acceso a opciones especiales en el menú de opciones{/size}" at truecenter with Dissolve(1.0)
+    
+    pause 9.0
+    
+    hide text with Dissolve(2.0)
+    
     return
 
+label ventana_cambiada:
+    $ tiempo_activo = False
+    
+    hide screen cronometro
+    hide screen distorsion_cordura
+    hide screen ver_problema
+    hide screen ingresar_respuesta
+    hide screen ver_problem
+    
+    stop music
+    stop sound
+    
+    window hide
+    
+    scene black
+    
+    # Mostrar el video con pantalla
+    show screen mostrar_ojo_gif
+    
+    pause
+    
+    return
 

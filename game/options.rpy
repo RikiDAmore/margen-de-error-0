@@ -30,9 +30,15 @@ default preferences.text_cps = 30
 
 default preferences.afm_time = 15
 
+define config.skip_delay = 50
+
 define config.save_directory = "MargendeError0-1763509773"
 
 define config.window_icon = "gui/window_icon.png"
+
+define config.has_autosave = False
+define config.autosave_on_quit = False
+define config.autosave_slots = 0
 
 init python:
     build.classify('**~', None)
@@ -50,35 +56,142 @@ init python:
     
     config.keymap['game_menu'] = []
     config.keymap['hide_windows'] = []
-    
     config.keymap['screenshot'] = ['s']
     
-    def check_window_minimized():
+    ventana_cambiada = False
+    ultimo_estado_foco = True
+    tiempo_activo_anterior = False
+    
+    def resetear_deteccion_ventana():
+        global ventana_cambiada, ultimo_estado_foco, tiempo_activo_anterior
+        ventana_cambiada = False
+        ultimo_estado_foco = True
+        tiempo_activo_anterior = False
+    
+    def verificar_codigo_debug(codigo):
+        if codigo.lower() == "debug":
+            store.persistent.modo_debug_desbloqueado = True
+            renpy.hide_screen("input_debug_code")
+            renpy.notify("¡Modo Debug Desbloqueado!")
+        else:
+            renpy.hide_screen("input_debug_code")
+            renpy.notify("Código incorrecto")
+    
+    def debug_agregar_tiempo():
+        global tiempo_restante
+        tiempo_restante += 1800
+        renpy.notify("Debug: +30 minutos")
+    
+    def debug_reducir_tiempo():
+        global tiempo_restante
+        tiempo_restante = max(0, tiempo_restante - 1800)
+        renpy.notify("Debug: -30 minutos")
+    
+    def debug_pausar_cronometro():
         global tiempo_activo
-        
-        if tiempo_activo:
+        tiempo_activo = not tiempo_activo
+        renpy.notify("Debug: Cronómetro " + ("reanudado" if tiempo_activo else "pausado"))
+    
+    def debug_mostrar_respuestas():
+        if hasattr(store, 'current_level') and hasattr(store, 'problema_actual'):
+            respuestas = store.problems.get(store.current_level, {}).get("respuestas", {}).get(store.problema_actual, {})
+            msg = "Respuestas: "
+            for key, val in respuestas.items():
+                msg += f"{key}={val} "
+            renpy.notify(msg)
+        else:
+            renpy.notify("No hay problema activo")
+    
+    def debug_toggle_latidos():
+        renpy.music.stop(channel="sound")
+        renpy.notify("Debug: Latidos detenidos")
+    
+    def hide_all_glitch_messages():
+        for i in range(15):
+            renpy.hide_screen("mensaje_glitch_{}".format(i))
+    
+    def hacer_parpadear_ventana():
+        try:
             import pygame
-            try:
-                if pygame.event.peek(pygame.ACTIVEEVENT):
-                    for event in pygame.event.get(pygame.ACTIVEEVENT):
-                        if event.state & 2 == 0:
-                            renpy.quit(relaunch=False, save=False)
-            except:
-                pass
+            import ctypes
+            if renpy.windows:
+                hwnd = pygame.display.get_wm_info()['window']
+                ctypes.windll.user32.FlashWindow(hwnd, True)
+        except:
+            pass
+    
+    def check_window_minimized():
+        global ventana_cambiada, ultimo_estado_foco, tiempo_activo_anterior
+        
+        if hasattr(store, 'deteccion_ventana_activa') and not store.deteccion_ventana_activa:
+            return
+        
+        if hasattr(store, 'tiempo_activo') and store.tiempo_activo:
+            if not tiempo_activo_anterior:
+                import pygame
+                try:
+                    ultimo_estado_foco = pygame.key.get_focused()
+                except:
+                    ultimo_estado_foco = True
+                tiempo_activo_anterior = True
+            
+            if not ventana_cambiada:
+                import pygame
+                try:
+                    tiene_foco = pygame.key.get_focused()
+                    
+                    if ultimo_estado_foco and not tiene_foco:
+                        ventana_cambiada = True
+                        
+                        # Forzar que la ventana vuelva al frente de forma más agresiva
+                        if renpy.windows:
+                            import ctypes
+                            hwnd = pygame.display.get_wm_info()['window']
+                            
+                            ctypes.windll.user32.ShowWindow(hwnd, 9)
+                            
+                            ctypes.windll.user32.SetWindowPos(hwnd, -1, 0, 0, 0, 0, 0x0003)
+                            ctypes.windll.user32.SetWindowPos(hwnd, -2, 0, 0, 0, 0, 0x0003)
+                            ctypes.windll.user32.SetForegroundWindow(hwnd)
+                            ctypes.windll.user32.BringWindowToTop(hwnd)
+                            ctypes.windll.user32.SetFocus(hwnd)
+                    
+                    ultimo_estado_foco = tiene_foco
+                except:
+                    pass
+        else:
+            ventana_cambiada = False
+            ultimo_estado_foco = True
+            tiempo_activo_anterior = False
     
     config.periodic_callbacks = [check_window_minimized]
     
     tiempo_inicio_escritura = 0
     escribiendo_respuesta = False
+    latidos_iniciados = False
+    latidos_acelerados = False
     
     def actualizar_tiempo():
-        global tiempo_restante, tiempo_activo
+        global tiempo_restante, tiempo_activo, latidos_iniciados, latidos_acelerados
         
         if tiempo_activo and tiempo_restante > 0:
             tiempo_restante -= 1
             
+            # Reproducir latidos acelerados cuando queda 1 hora o menos (3600 segundos)
+            if tiempo_restante <= 3600 and not latidos_acelerados:
+                renpy.music.stop(channel="sound")
+                renpy.music.play("audio/corazonacel.mp3", channel="sound", loop=True)
+                latidos_acelerados = True
+            # Reproducir latidos normales cuando quedan 3 horas o menos (10800 segundos)
+            elif tiempo_restante <= 10800 and not latidos_iniciados:
+                renpy.music.play("audio/corazon.mp3", channel="sound", loop=True)
+                latidos_iniciados = True
+            
             if tiempo_restante <= 0:
                 tiempo_activo = False
+                latidos_iniciados = False
+                latidos_acelerados = False
+                renpy.music.stop(channel="sound")
                 renpy.hide_screen("cronometro")
                 renpy.hide_screen("distorsion_cordura")
                 renpy.hide_screen("ver_problema")
@@ -86,12 +199,15 @@ init python:
                 renpy.jump("game_over_tiempo")
     
     def penalizar_tiempo(segundos=900):
-        global tiempo_restante, tiempo_activo
+        global tiempo_restante, tiempo_activo, latidos_iniciados, latidos_acelerados
         
         tiempo_restante = max(0, tiempo_restante - segundos)
         
         if tiempo_restante <= 0:
             tiempo_activo = False
+            latidos_iniciados = False
+            latidos_acelerados = False
+            renpy.music.stop(channel="sound")
             renpy.hide_screen("cronometro")
             renpy.hide_screen("distorsion_cordura")
             renpy.hide_screen("ver_problema")

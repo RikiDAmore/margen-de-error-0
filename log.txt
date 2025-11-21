@@ -1,87 +1,46 @@
-<<<<<<< HEAD
-2025-11-21 14:54:35 UTC
+2025-11-21 21:53:51 UTC
 Windows-10-10.0.19045-SP0
 Ren'Py 8.5.0.25111603
 
-Early init took 84 ms
-Loading error handling took 112 ms
-Loading script took 390 ms
-Loading save slot metadata took 299 ms
-Loading persistent took 1 ms
-Running init code took 142 ms
-Loading analysis data took 19 ms
-Analyze and compile ATL took 4 ms
-Reloading save slot metadata took 251 ms
-Dump and make backups took 64 ms
-Cleaning cache took 1 ms
-Making clean stores took 0 ms
-Initial gc took 57 ms
+Early init took 71 ms
+Loading error handling took 30 ms
+Loading script took 721 ms
+Loading save slot metadata took 24 ms
+Loading persistent took 0 ms
+Running init code took 64 ms
+Loading analysis data took 5 ms
+Analyze and compile ATL took 3 ms
+Reloading save slot metadata took 3 ms
+Backing up script files to 'C:\\Users\\riki_\\AppData\\Roaming/RenPy/backups\\Margen de Error 0':
+Dump and make backups took 75 ms
+Cleaning cache took 0 ms
+Making clean stores took 1 ms
+Initial gc took 87 ms
 DPI scale factor: 1.000000
 nvdrs: Loaded, about to disable thread optimizations.
 nvdrs: b"Couldn't load nvlib." (can be ignored)
-Creating interface object took 4 ms
-Init translation took 0 ms
+Creating interface object took 5 ms
+Init translation took 1 ms
 Cleaning stores took 0 ms
-Load screen analysis took 42 ms
-Analyze screens took 1 ms
-Save screen analysis took 0 ms
-Save pyanalysis took 0 ms
-Save bytecode took 0 ms
+Load screen analysis took 1 ms
+Analyze screens took 63 ms
+Save screen analysis took 20 ms
+Save pyanalysis took 12 ms
+Save bytecode took 49 ms
 Running _start took 1 ms
-Interface start took 492 ms
-=======
-2025-11-20 22:19:34 UTC
-Windows-10-10.0.19045-SP0
-Ren'Py 8.5.0.25111603
-
-Early init took 49 ms
-Loading error handling took 42 ms
-Loading script took 1288 ms
-Loading save slot metadata took 21 ms
-Loading persistent took 0 ms
-Running init code took 103 ms
-Loading analysis data took 1 ms
-Analyze and compile ATL took 6 ms
-Reloading save slot metadata took 3 ms
-Backing up script files to 'C:\\Users\\Juanv\\AppData\\Roaming/RenPy/backups\\margen-de-error-0':
-Dump and make backups took 58 ms
-Cleaning cache took 0 ms
-Making clean stores took 0 ms
-Initial gc took 48 ms
-DPI scale factor: 1.250000
-nvdrs: Loaded, about to disable thread optimizations.
-nvdrs: Disabled thread optimizations.
-Creating interface object took 288 ms
-Init translation took 0 ms
-Cleaning stores took 0 ms
-Load screen analysis took 0 ms
-Analyze screens took 25 ms
-Save screen analysis took 12 ms
-Save pyanalysis took 4 ms
-Save bytecode took 24 ms
-Running _start took 0 ms
-Interface start took 261 ms
->>>>>>> 209708efebada83cd9792f9005eae76f5feb18fc
+Interface start took 592 ms
 
 Initializing gl2 renderer:
-primary display bounds: (0, 0, 1920, 1080)
+primary display bounds: (0, 0, 1366, 768)
 swap interval: 1 frames
 Fullscreen mode.
-Vendor: 'NVIDIA Corporation'
-Renderer: 'Quadro P600/PCIe/SSE2'
-Version: '4.6.0 NVIDIA 573.44'
-Display Info: <Info({'bitsize': 32, 'bytesize': 4, 'masks': (16711680, 65280, 255, 0), 'shifts': (16, 8, 0, 0), 'losses': (0, 0, 0, 8), 'current_w': 1920, 'current_h': 1080, 'refresh_rate': 60, 'hw': False, 'wm': True, 'video_mem': 268435456, 'blit_hw': False, 'blit_hw_CC': False, 'blit_hw_A': False, 'blit_sw': False, 'blit_sw_CC': False, 'blit_sw_A': False})>
-Screen sizes: virtual=(1920, 1080) physical=(1920, 1080) drawable=(1920, 1080)
+Vendor: 'Intel'
+Renderer: 'Intel(R) HD Graphics 5500'
+Version: '4.3.0 - Build 10.18.15.4248'
+Display Info: <Info({'bitsize': 32, 'bytesize': 4, 'masks': (16711680, 65280, 255, 0), 'shifts': (16, 8, 0, 0), 'losses': (0, 0, 0, 8), 'current_w': 1366, 'current_h': 768, 'refresh_rate': 60, 'hw': False, 'wm': True, 'video_mem': 268435456, 'blit_hw': False, 'blit_hw_CC': False, 'blit_hw_A': False, 'blit_sw': False, 'blit_sw_CC': False, 'blit_sw_A': False})>
+Screen sizes: virtual=(1920, 1080) physical=(1366, 768) drawable=(1366, 768)
 Maximum texture size: 4096x4096
-<<<<<<< HEAD
 Cleaning stores took 0 ms
-Load screen analysis took 31 ms
+Load screen analysis took 77 ms
 Analyze screens took 0 ms
 Running _start took 2 ms
-=======
-Could not open 'cache/shaders.txt':
-Cleaning stores took 0 ms
-Load screen analysis took 23 ms
-Analyze screens took 0 ms
-Running _start took 1 ms
->>>>>>> 209708efebada83cd9792f9005eae76f5feb18fc

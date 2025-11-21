@@ -2,9 +2,9 @@
 errors listed below, and try again.
 
 
-File "game/screens.rpy", line 1756: 'action' is not a keyword argument or valid child of the screen statement.
-    action Play("music", "audio/gameover.mp3", fadein=1.0)
-          ^
+File "game/screens.rpy", line 1358: 'alpha' is not a keyword argument or valid child of the frame statement.
+    alpha 0.0
+         ^
 
 Ren'Py Version: Ren'Py 8.5.0.25111603
-Thu Nov 20 16:08:57 2025
+Fri Nov 21 14:06:32 2025

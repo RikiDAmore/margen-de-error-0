@@ -273,14 +273,11 @@ screen navigation():
         spacing gui.navigation_spacing
 
         if main_menu:
-            textbutton _("Comenzar") action Start()
+            textbutton _("Comenzar") action Jump("main_menu_start")
         else:
-            textbutton _("Menú principal") action MainMenu()
+            textbutton _("Menú principal") action Jump("return_to_main_menu")
 
         textbutton _("Opciones") action ShowMenu("preferences")
-
-        if renpy.variant("pc"):
-            textbutton _("Salir") action Quit(confirm=not main_menu)
 
 style navigation_button is gui_button
 style navigation_button_text is gui_button_text
@@ -288,6 +285,8 @@ style navigation_button_text is gui_button_text
 style navigation_button:
     size_group "navigation"
     properties gui.button_properties("navigation_button")
+    hover_sound "audio/hover.mp3"
+    activate_sound "audio/select.mp3"
 
 style navigation_button_text:
     properties gui.text_properties("navigation_button")
@@ -297,15 +296,23 @@ screen main_menu():
 
     add Solid("#000000")
 
-    on "show" action Play("music", "audio/mmenu.mp3")
+    on "replace" action [Stop("music"), Function(renpy.restart_interaction)]
+    
+    timer 1.0 action If(renpy.music.get_playing(channel='music') != "audio/mmenu.mp3",
+                        Play("music", "audio/mmenu.mp3", fadein=1.0))
+    
+    key "d" action Show("input_debug_code")
+    
+    if (persistent.modo_debug_desbloqueado or persistent.juego_completado) and comandos_debug_activos:
+        key "x" action Show("reset_debug_menu")
 
-    vbox:
+    vbox at main_menu_appear:
         align (0.5, 0.22)
         spacing 10
 
         add "logo"
 
-    vbox:
+    vbox at main_menu_appear:
         align (0.5, 0.58)
         spacing 25
 
@@ -313,9 +320,12 @@ screen main_menu():
             action Jump("main_menu_start")
         textbutton "Opciones" style "red_button":
             action ShowMenu("preferences")
-
         textbutton "Salir" style "red_button":
             action Quit(confirm=True)
+
+transform main_menu_appear:
+    alpha 0.0
+    linear 1.0 alpha 1.0
 
 style main_menu_frame is empty
 style main_menu_vbox is vbox
@@ -355,6 +365,7 @@ screen game_menu(title, scroll=None, yinitial=0.0, spacing=0):
 
     frame:
         style "game_menu_outer_frame"
+        at main_menu_appear
 
         hbox:
             frame:
@@ -370,11 +381,14 @@ screen game_menu(title, scroll=None, yinitial=0.0, spacing=0):
                         mousewheel True
                         draggable True
                         pagekeys True
+                        xalign 0.5
+                        yalign 0.5
 
                         side_yfill True
 
                         vbox:
                             spacing spacing
+                            xalign 0.5
 
                             transclude
 
@@ -399,10 +413,14 @@ screen game_menu(title, scroll=None, yinitial=0.0, spacing=0):
 
     use navigation
 
-    textbutton _("Volver"):
-        style "return_button"
-
-        action Return()
+    if main_menu:
+        textbutton _("Volver"):
+            style "return_button"
+            action [Play("music", "audio/mmenu.mp3", fadein=1.0), Return()]
+    else:
+        textbutton _("Volver"):
+            style "return_button"
+            action Return()
 
     label title
 
@@ -434,11 +452,13 @@ style game_menu_navigation_frame:
 
 style game_menu_content_frame:
     left_margin 60
-    right_margin 30
+    right_margin 60
     top_margin 15
+    xalign 0.5
 
 style game_menu_viewport:
     xsize 1380
+    xalign 0.5
 
 style game_menu_vscrollbar:
     unscrollable gui.unscrollable
@@ -462,55 +482,100 @@ style return_button:
 
 screen preferences():
     tag menu
+    
+    on "show" action Play("music", "audio/options.mp3", fadein=1.0)
+    on "replace" action Play("music", "audio/options.mp3", fadein=1.0)
 
-    use game_menu(_("Opciones"), scroll="viewport"):
+    add Solid("#000000")
+    
+    frame:
+        xalign 0.5
+        yalign 0.5
+        background "#00000000"
+        
         vbox:
             spacing 40
             xalign 0.5
 
-            hbox:
-                style_prefix "slider"
-                box_wrap True
+            text "Opciones" size 50 color "#ffffff" xalign 0.5 bold True
+            
+            null height 20
+
+            vbox:
+                spacing 25
                 xalign 0.5
-                spacing 50
 
-                vbox:
-                    spacing 25
-
-                    if config.has_music:
-                        vbox:
-                            spacing 10
-                            label _("Volumen Música"):
-                                xalign 0.5
-                            bar value Preference("music volume"):
-                                xalign 0.5
-                                xsize 400
-
-                    if config.has_sound:
-                        vbox:
-                            spacing 10
-                            label _("Volumen Sonido"):
-                                xalign 0.5
-                            bar value Preference("sound volume"):
-                                xalign 0.5
-                                xsize 400
-
-                    if config.has_voice:
-                        vbox:
-                            spacing 10
-                            label _("Volumen Voz"):
-                                xalign 0.5
-                            bar value Preference("voice volume"):
-                                xalign 0.5
-                                xsize 400
-
-                    if config.has_music or config.has_sound or config.has_voice:
-                        null height 20
-                        
-                        textbutton _("Silenciar Todo"):
-                            action Preference("all mute", "toggle")
-                            style "mute_all_button"
+                if config.has_music:
+                    vbox:
+                        spacing 10
+                        xalign 0.5
+                        label _("Volumen Música"):
                             xalign 0.5
+                        bar value Preference("music volume"):
+                            xalign 0.5
+                            xsize 400
+
+                if config.has_sound:
+                    vbox:
+                        spacing 10
+                        xalign 0.5
+                        label _("Volumen Sonido"):
+                            xalign 0.5
+                        bar value Preference("sound volume"):
+                            xalign 0.5
+                            xsize 400
+
+                if config.has_music or config.has_sound:
+                    null height 20
+                    
+                    textbutton _("Silenciar Todo"):
+                        action Preference("all mute", "toggle")
+                        style "mute_all_button"
+                        xalign 0.5
+                
+                null height 30
+                
+                if persistent.juego_completado or persistent.modo_debug_desbloqueado:
+                    hbox:
+                        spacing 40
+                        xalign 0.5
+                        
+                        vbox:
+                            spacing 20
+                            
+                            vbox:
+                                spacing 10
+                                
+                                text "Detección de Cambio de Ventana" size 22 color "#ffffff"
+                                
+                                textbutton _("Activada" if deteccion_ventana_activa else "Desactivada"):
+                                    action [ToggleVariable("deteccion_ventana_activa"), Function(resetear_deteccion_ventana)]
+                                    style "check_button"
+                            
+                            vbox:
+                                spacing 10
+                                
+                                text "Comandos Debug" size 22 color "#ffffff"
+                                
+                                textbutton _("Activados" if comandos_debug_activos else "Desactivados"):
+                                    action ToggleVariable("comandos_debug_activos")
+                                    style "check_button"
+                        
+                        vbox:
+                            spacing 10
+                            yalign 0.5
+                            
+                            text "Ojo Observador" size 22 color "#ffffff"
+                            
+                            textbutton "Ver Demostración":
+                                action Show("demo_ojo_observador")
+                                style "check_button"
+            
+            null height 40
+            
+            textbutton "Volver" style "red_button":
+                action [Play("music", "audio/mmenu.mp3", fadein=1.0), Return()]
+                xalign 0.5
 
 style pref_label is gui_label
 style pref_label_text is gui_label_text
@@ -564,6 +629,8 @@ style check_vbox:
 style check_button:
     properties gui.button_properties("check_button")
     foreground "gui/button/check_[prefix_]foreground.png"
+    hover_sound "audio/hover.mp3"
+    activate_sound "audio/select.mp3"
 
 style check_button_text:
     properties gui.text_properties("check_button")
@@ -575,6 +642,8 @@ style slider_button:
     properties gui.button_properties("slider_button")
     yalign 0.5
     left_margin 15
+    hover_sound "audio/hover.mp3"
+    activate_sound "audio/select.mp3"
 
 style slider_button_text:
     properties gui.text_properties("slider_button")
@@ -715,6 +784,8 @@ style red_button is default:
     idle_color "#cccccc"
     background None
     hover_background None
+    hover_sound "audio/hover.mp3"
+    activate_sound "audio/select.mp3"
 
 style red_button_text is red_button
 
@@ -739,6 +810,17 @@ screen name_input():
 screen ver_problema():
     modal True
     zorder 100
+    
+    if comandos_debug_activos:
+        key "r" action Jump("respuesta_correcta")
+        key "t" action Function(debug_agregar_tiempo)
+        key "y" action Function(debug_reducir_tiempo)
+        key "h" action Function(debug_pausar_cronometro)
+        key "g" action Jump("game_over_tiempo")
+        key "c" action Jump("corredor_completado")
+        key "m" action Function(debug_mostrar_respuestas)
+        key "f" action Function(debug_toggle_latidos)
+        key "v" action Jump("corredor_completado")
 
     frame:
         xalign 0.5
@@ -779,6 +861,9 @@ screen ver_problem():
         action Hide("ver_problem")
 
 screen cronometro():
+    if ventana_cambiada:
+        timer 0.1 action Jump("ventana_cambiada")
+    
     if tiempo_activo:
         timer 1.0 repeat True action Function(actualizar_tiempo)
         
@@ -935,11 +1020,11 @@ screen game_over_screen():
                 spacing 30
                 xalign 0.5
                 
-                textbutton "Reintentar":
-                    action [Stop("music", fadeout=1.0), Return(), Jump("start")]
+                textbutton "Reintentar" style "red_button":
+                    action [Return(), Jump("game_over_retry")]
                     
-                textbutton "Menú Principal":
-                    action [Stop("music", fadeout=1.0), Return(), MainMenu()]
+                textbutton "Menú Principal" style "red_button":
+                    action [Return(), Jump("return_to_main_menu")]
 
 style pref_vbox:
     variant "medium"
@@ -1038,4 +1123,261 @@ style slider_vbox:
 
 style slider_slider:
     variant "small"
-    xsize 900
+    xsize gui.slider_size
+
+screen mostrar_ojo_gif():
+    zorder 1000
+    modal True
+    
+    on "show" action Play("sound", "audio/paraelojo.mp3", loop=True)
+    
+    timer 0.1 repeat True action Function(renpy.invoke_in_thread, hacer_parpadear_ventana)
+    
+    timer 5.0 action Function(renpy.quit, relaunch=False, save=False)
+    
+    frame:
+        background None
+        xalign 0.5
+        yalign 0.5
+        
+        add "ojo_animado"
+    
+    for i in range(15):
+        timer (0.1 + i * 0.3):
+            action Show("mensaje_glitch_{}".format(i))
+
+screen demo_ojo_observador():
+    zorder 1000
+    modal True
+    
+    on "show" action Play("sound", "audio/paraelojo.mp3", loop=True)
+    on "hide" action Stop("sound")
+    
+    timer 5.0 action Hide("demo_ojo_observador")
+    
+    frame:
+        background None
+        xalign 0.5
+        yalign 0.5
+        
+        add "ojo_animado"
+    
+    for i in range(15):
+        timer (0.1 + i * 0.3):
+            action Show("mensaje_glitch_{}".format(i))
+    
+    timer 5.0 action Function(hide_all_glitch_messages)
+    
+screen mensaje_glitch_0():
+    zorder 1001
+    $ mensajes = ["¿QUÉ ESTÁS HACIENDO?", "NO DEBERÍAS ESTAR AQUÍ", "VUELVE", "TE ESTOY OBSERVANDO", "NO PUEDES ESCAPAR", "CONCÉNTRATE", "ESTO NO ES UN JUEGO", "¿CREÍAS QUE PODÍAS HACER TRAMPA?", "SIEMPRE TE VEO", "NO HAY SALIDA"]
+    $ import random
+    $ msg = random.choice(mensajes)
+    $ pos_x = random.uniform(0.1, 0.9)
+    $ pos_y = random.uniform(0.1, 0.9)
+    $ tamano = random.randint(20, 50)
+    text msg xalign pos_x yalign pos_y size tamano color "#ff0000" bold True at transform:
+        alpha 0.0
+        linear 0.1 alpha 1.0
+
+screen mensaje_glitch_1():
+    zorder 1001
+    $ mensajes = ["¿QUÉ ESTÁS HACIENDO?", "NO DEBERÍAS ESTAR AQUÍ", "VUELVE", "TE ESTOY OBSERVANDO", "NO PUEDES ESCAPAR", "CONCÉNTRATE", "ESTO NO ES UN JUEGO", "¿CREÍAS QUE PODÍAS HACER TRAMPA?", "SIEMPRE TE VEO", "NO HAY SALIDA"]
+    $ import random
+    $ msg = random.choice(mensajes)
+    $ pos_x = random.uniform(0.1, 0.9)
+    $ pos_y = random.uniform(0.1, 0.9)
+    $ tamano = random.randint(20, 50)
+    text msg xalign pos_x yalign pos_y size tamano color "#ff0000" bold True at transform:
+        alpha 0.0
+        linear 0.1 alpha 1.0
+
+screen mensaje_glitch_2():
+    zorder 1001
+    $ mensajes = ["¿QUÉ ESTÁS HACIENDO?", "NO DEBERÍAS ESTAR AQUÍ", "VUELVE", "TE ESTOY OBSERVANDO", "NO PUEDES ESCAPAR", "CONCÉNTRATE", "ESTO NO ES UN JUEGO", "¿CREÍAS QUE PODÍAS HACER TRAMPA?", "SIEMPRE TE VEO", "NO HAY SALIDA"]
+    $ import random
+    $ msg = random.choice(mensajes)
+    $ pos_x = random.uniform(0.1, 0.9)
+    $ pos_y = random.uniform(0.1, 0.9)
+    $ tamano = random.randint(20, 50)
+    text msg xalign pos_x yalign pos_y size tamano color "#ff0000" bold True at transform:
+        alpha 0.0
+        linear 0.1 alpha 1.0
+
+screen mensaje_glitch_3():
+    zorder 1001
+    $ mensajes = ["¿QUÉ ESTÁS HACIENDO?", "NO DEBERÍAS ESTAR AQUÍ", "VUELVE", "TE ESTOY OBSERVANDO", "NO PUEDES ESCAPAR", "CONCÉNTRATE", "ESTO NO ES UN JUEGO", "¿CREÍAS QUE PODÍAS HACER TRAMPA?", "SIEMPRE TE VEO", "NO HAY SALIDA"]
+    $ import random
+    $ msg = random.choice(mensajes)
+    $ pos_x = random.uniform(0.1, 0.9)
+    $ pos_y = random.uniform(0.1, 0.9)
+    $ tamano = random.randint(20, 50)
+    text msg xalign pos_x yalign pos_y size tamano color "#ff0000" bold True at transform:
+        alpha 0.0
+        linear 0.1 alpha 1.0
+
+screen mensaje_glitch_4():
+    zorder 1001
+    $ mensajes = ["¿QUÉ ESTÁS HACIENDO?", "NO DEBERÍAS ESTAR AQUÍ", "VUELVE", "TE ESTOY OBSERVANDO", "NO PUEDES ESCAPAR", "CONCÉNTRATE", "ESTO NO ES UN JUEGO", "¿CREÍAS QUE PODÍAS HACER TRAMPA?", "SIEMPRE TE VEO", "NO HAY SALIDA"]
+    $ import random
+    $ msg = random.choice(mensajes)
+    $ pos_x = random.uniform(0.1, 0.9)
+    $ pos_y = random.uniform(0.1, 0.9)
+    $ tamano = random.randint(20, 50)
+    text msg xalign pos_x yalign pos_y size tamano color "#ff0000" bold True at transform:
+        alpha 0.0
+        linear 0.1 alpha 1.0
+
+screen mensaje_glitch_5():
+    zorder 1001
+    $ mensajes = ["¿QUÉ ESTÁS HACIENDO?", "NO DEBERÍAS ESTAR AQUÍ", "VUELVE", "TE ESTOY OBSERVANDO", "NO PUEDES ESCAPAR", "CONCÉNTRATE", "ESTO NO ES UN JUEGO", "¿CREÍAS QUE PODÍAS HACER TRAMPA?", "SIEMPRE TE VEO", "NO HAY SALIDA"]
+    $ import random
+    $ msg = random.choice(mensajes)
+    $ pos_x = random.uniform(0.1, 0.9)
+    $ pos_y = random.uniform(0.1, 0.9)
+    $ tamano = random.randint(20, 50)
+    text msg xalign pos_x yalign pos_y size tamano color "#ff0000" bold True at transform:
+        alpha 0.0
+        linear 0.1 alpha 1.0
+
+screen mensaje_glitch_6():
+    zorder 1001
+    $ mensajes = ["¿QUÉ ESTÁS HACIENDO?", "NO DEBERÍAS ESTAR AQUÍ", "VUELVE", "TE ESTOY OBSERVANDO", "NO PUEDES ESCAPAR", "CONCÉNTRATE", "ESTO NO ES UN JUEGO", "¿CREÍAS QUE PODÍAS HACER TRAMPA?", "SIEMPRE TE VEO", "NO HAY SALIDA"]
+    $ import random
+    $ msg = random.choice(mensajes)
+    $ pos_x = random.uniform(0.1, 0.9)
+    $ pos_y = random.uniform(0.1, 0.9)
+    $ tamano = random.randint(20, 50)
+    text msg xalign pos_x yalign pos_y size tamano color "#ff0000" bold True at transform:
+        alpha 0.0
+        linear 0.1 alpha 1.0
+
+screen mensaje_glitch_7():
+    zorder 1001
+    $ mensajes = ["¿QUÉ ESTÁS HACIENDO?", "NO DEBERÍAS ESTAR AQUÍ", "VUELVE", "TE ESTOY OBSERVANDO", "NO PUEDES ESCAPAR", "CONCÉNTRATE", "ESTO NO ES UN JUEGO", "¿CREÍAS QUE PODÍAS HACER TRAMPA?", "SIEMPRE TE VEO", "NO HAY SALIDA"]
+    $ import random
+    $ msg = random.choice(mensajes)
+    $ pos_x = random.uniform(0.1, 0.9)
+    $ pos_y = random.uniform(0.1, 0.9)
+    $ tamano = random.randint(20, 50)
+    text msg xalign pos_x yalign pos_y size tamano color "#ff0000" bold True at transform:
+        alpha 0.0
+        linear 0.1 alpha 1.0
+
+screen mensaje_glitch_8():
+    zorder 1001
+    $ mensajes = ["¿QUÉ ESTÁS HACIENDO?", "NO DEBERÍAS ESTAR AQUÍ", "VUELVE", "TE ESTOY OBSERVANDO", "NO PUEDES ESCAPAR", "CONCÉNTRATE", "ESTO NO ES UN JUEGO", "¿CREÍAS QUE PODÍAS HACER TRAMPA?", "SIEMPRE TE VEO", "NO HAY SALIDA"]
+    $ import random
+    $ msg = random.choice(mensajes)
+    $ pos_x = random.uniform(0.1, 0.9)
+    $ pos_y = random.uniform(0.1, 0.9)
+    $ tamano = random.randint(20, 50)
+    text msg xalign pos_x yalign pos_y size tamano color "#ff0000" bold True at transform:
+        alpha 0.0
+        linear 0.1 alpha 1.0
+
+screen mensaje_glitch_9():
+    zorder 1001
+    $ mensajes = ["¿QUÉ ESTÁS HACIENDO?", "NO DEBERÍAS ESTAR AQUÍ", "VUELVE", "TE ESTOY OBSERVANDO", "NO PUEDES ESCAPAR", "CONCÉNTRATE", "ESTO NO ES UN JUEGO", "¿CREÍAS QUE PODÍAS HACER TRAMPA?", "SIEMPRE TE VEO", "NO HAY SALIDA"]
+    $ import random
+    $ msg = random.choice(mensajes)
+    $ pos_x = random.uniform(0.1, 0.9)
+    $ pos_y = random.uniform(0.1, 0.9)
+    $ tamano = random.randint(20, 50)
+    text msg xalign pos_x yalign pos_y size tamano color "#ff0000" bold True at transform:
+        alpha 0.0
+        linear 0.1 alpha 1.0
+
+screen mensaje_glitch_10():
+    zorder 1001
+    $ mensajes = ["¿QUÉ ESTÁS HACIENDO?", "NO DEBERÍAS ESTAR AQUÍ", "VUELVE", "TE ESTOY OBSERVANDO", "NO PUEDES ESCAPAR", "CONCÉNTRATE", "ESTO NO ES UN JUEGO", "¿CREÍAS QUE PODÍAS HACER TRAMPA?", "SIEMPRE TE VEO", "NO HAY SALIDA"]
+    $ import random
+    $ msg = random.choice(mensajes)
+    $ pos_x = random.uniform(0.1, 0.9)
+    $ pos_y = random.uniform(0.1, 0.9)
+    $ tamano = random.randint(20, 50)
+    text msg xalign pos_x yalign pos_y size tamano color "#ff0000" bold True at transform:
+        alpha 0.0
+        linear 0.1 alpha 1.0
+
+screen mensaje_glitch_11():
+    zorder 1001
+    $ mensajes = ["¿QUÉ ESTÁS HACIENDO?", "NO DEBERÍAS ESTAR AQUÍ", "VUELVE", "TE ESTOY OBSERVANDO", "NO PUEDES ESCAPAR", "CONCÉNTRATE", "ESTO NO ES UN JUEGO", "¿CREÍAS QUE PODÍAS HACER TRAMPA?", "SIEMPRE TE VEO", "NO HAY SALIDA"]
+    $ import random
+    $ msg = random.choice(mensajes)
+    $ pos_x = random.uniform(0.1, 0.9)
+    $ pos_y = random.uniform(0.1, 0.9)
+    $ tamano = random.randint(20, 50)
+    text msg xalign pos_x yalign pos_y size tamano color "#ff0000" bold True at transform:
+        alpha 0.0
+        linear 0.1 alpha 1.0
+
+screen mensaje_glitch_12():
+    zorder 1001
+    $ mensajes = ["¿QUÉ ESTÁS HACIENDO?", "NO DEBERÍAS ESTAR AQUÍ", "VUELVE", "TE ESTOY OBSERVANDO", "NO PUEDES ESCAPAR", "CONCÉNTRATE", "ESTO NO ES UN JUEGO", "¿CREÍAS QUE PODÍAS HACER TRAMPA?", "SIEMPRE TE VEO", "NO HAY SALIDA"]
+    $ import random
+    $ msg = random.choice(mensajes)
+    $ pos_x = random.uniform(0.1, 0.9)
+    $ pos_y = random.uniform(0.1, 0.9)
+    $ tamano = random.randint(20, 50)
+    text msg xalign pos_x yalign pos_y size tamano color "#ff0000" bold True at transform:
+        alpha 0.0
+        linear 0.1 alpha 1.0
+
+screen mensaje_glitch_13():
+    zorder 1001
+    $ mensajes = ["¿QUÉ ESTÁS HACIENDO?", "NO DEBERÍAS ESTAR AQUÍ", "VUELVE", "TE ESTOY OBSERVANDO", "NO PUEDES ESCAPAR", "CONCÉNTRATE", "ESTO NO ES UN JUEGO", "¿CREÍAS QUE PODÍAS HACER TRAMPA?", "SIEMPRE TE VEO", "NO HAY SALIDA"]
+    $ import random
+    $ msg = random.choice(mensajes)
+    $ pos_x = random.uniform(0.1, 0.9)
+    $ pos_y = random.uniform(0.1, 0.9)
+    $ tamano = random.randint(20, 50)
+    text msg xalign pos_x yalign pos_y size tamano color "#ff0000" bold True at transform:
+        alpha 0.0
+        linear 0.1 alpha 1.0
+
+screen mensaje_glitch_14():
+    zorder 1001
+    $ mensajes = ["¿QUÉ ESTÁS HACIENDO?", "NO DEBERÍAS ESTAR AQUÍ", "VUELVE", "TE ESTOY OBSERVANDO", "NO PUEDES ESCAPAR", "CONCÉNTRATE", "ESTO NO ES UN JUEGO", "¿CREÍAS QUE PODÍAS HACER TRAMPA?", "SIEMPRE TE VEO", "NO HAY SALIDA"]
+    $ import random
+    $ msg = random.choice(mensajes)
+    $ pos_x = random.uniform(0.1, 0.9)
+    $ pos_y = random.uniform(0.1, 0.9)
+    $ tamano = random.randint(20, 50)
+    text msg xalign pos_x yalign pos_y size tamano color "#ff0000" bold True at transform:
+        alpha 0.0
+        linear 0.1 alpha 1.0
+
+screen input_debug_code():
+    zorder 200
+    modal True
+    
+    default codigo_ingresado = ""
+    
+    frame:
+        xalign 0.5
+        yalign 0.5
+        background "#000000dd"
+        padding (40, 30)
+        
+        vbox:
+            spacing 20
+            
+            text "Ingresa el código:" size 25 color "#ffffff"
+            
+            input:
+                value ScreenVariableInputValue("codigo_ingresado")
+                length 10
+                color "#ffffff"
+                size 30
+                xalign 0.5
+            
+            hbox:
+                spacing 20
+                xalign 0.5
+                
+                textbutton "Confirmar":
+                    action Function(verificar_codigo_debug, codigo_ingresado)
+                    
+                textbutton "Cancelar":
+                    action Hide("input_debug_code")
